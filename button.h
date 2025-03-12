@@ -17,10 +17,19 @@
 #define BUTTON_HOLD_TIME 1000       // Hold time in milliseconds
 
 #define BUTTON_NOTHING 0
+
+#ifdef HOLD
 #define BUTTON_HOLD 1
+#endif
+
+#ifdef SINGLE
 #define BUTTON_SINGLE 2
+#endif
+
+#ifndef SINGLE
 #define BUTTON_PRESSED 3    
 #define BUTTON_RELEASED 4
+#endif
 
 #define BUTTON_ACTIVE_HIGH 0
 #define BUTTON_ACTIVE_LOW 1

@@ -11,13 +11,13 @@
 * Initialize button struct
 */
 void buttonInit(Button *btn) {
-	btn->pressed = 0,
-    btn->change = 0,
-    btn->input = 0,
-    btn->debounce = 0,
-    btn->counter = 0,
-    btn->hold = 0,
-    btn->press_count = 0
+	btn->pressed = 0;
+    btn->change = 0;
+    btn->input = 0;
+    btn->debounce = 0;
+    btn->counter = 0;
+    btn->hold = 0;
+    btn->press_count = 0;
 }
 
 /* Handles button press events and detects different types of presses
