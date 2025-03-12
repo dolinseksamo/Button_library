@@ -54,7 +54,7 @@ typedef struct {
     volatile uint16_t counter;
 } Button;
 
-void buttonInit(Button *btn);
+
 uint8_t buttonCallback(Button *btn);
 void buttonIncrementCounter(Button *btn);
 void buttonInput(Button *btn);

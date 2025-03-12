@@ -7,15 +7,7 @@
 
 #include "button.h"
 
-/*
-* Initialize button struct
-*/
-void buttonInit(Button *btn) {
-	btn->pressed = 0;
-    btn->change = 0;
-    btn->input = 0;
-    btn->debounce = 0;
-    btn->counter = 0;
+
 
 #ifdef HOLD
     btn->hold = 0;
