@@ -16,9 +16,16 @@ void buttonInit(Button *btn) {
     btn->input = 0;
     btn->debounce = 0;
     btn->counter = 0;
+
+#ifdef HOLD
     btn->hold = 0;
+#endif
+
+#ifdef SINGLE
     btn->press_count = 0;
+#endif
 }
+
 
 /* Handles button press events and detects different types of presses
  *
@@ -41,13 +48,13 @@ uint8_t buttonCallback(Button *btn) {
 	btn->pressed = btn->Active_High ^ pin_state;		// Check if pressed or released
 
 	if (btn->pressed) {				// Check if button is pressed ...
-		#ifdef SINGLE
+#ifdef SINGLE
 		btn->press_count++;
-		#else
+#else
 		out = BUTTON_PRESSED;
-		#endif
+#endif
 
-		#ifdef HOLD
+#ifdef HOLD
 		if (btn->hold) {
 			out = BUTTON_HOLD;
 			btn->hold = 0;
@@ -55,20 +62,20 @@ uint8_t buttonCallback(Button *btn) {
 			btn->counter = 0;
 			btn->pressed = 0;
 		}
-		#endif
+#endif
 	}
-	#ifdef SINGLE
+#ifdef SINGLE
 	else if (btn->press_count == 1) {
 		out = BUTTON_SINGLE;	// Single press
 		btn->press_count = 0;
 		btn->counter = 0;
 	}
-	#else
+#else
 	else {
 		out = BUTTON_RELEASED;
 		btn->counter = 0;
 	}
-	#endif
+#endif
 
     return out;
 }

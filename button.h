@@ -39,8 +39,14 @@ typedef struct {
     uint16_t GPIO_Pin;
     uint8_t Active_High;  // 0 = Active High, 1 = Active Low
 
+#ifdef SINGLE
     uint8_t press_count;
+#endif
+
+#ifdef HOLD
     uint8_t hold;
+#endif
+
     volatile uint8_t input;
     volatile uint8_t debounce;
     volatile uint8_t change;
