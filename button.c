@@ -8,17 +8,6 @@
 #include "button.h"
 
 
-
-#ifdef HOLD
-    btn->hold = 0;
-#endif
-
-#ifdef SINGLE
-    btn->press_count = 0;
-#endif
-}
-
-
 /* Handles button press events and detects different types of presses
  *
  * This function should be called in the appropriate interrupt or polling routine.
