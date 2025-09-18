@@ -7,6 +7,35 @@
 
 #include "button.h"
 
+
+/* -------------------------------------------------------------------------
+ * buttonInit()
+ *
+ * Initializes a Button_t structure.
+ *
+ * Parameters:
+ *  - btn         : pointer to Button_t
+ *  - port        : GPIO port (e.g., GPIOA, GPIOB)
+ *  - pin         : GPIO pin number (e.g., GPIO_PIN_0)
+ *  - active_high : 0 = Active High, 1 = Active Low
+ *  - hold_enable : 0 = disable hold detection, 1 = enable hold detection
+ * ------------------------------------------------------------------------- */
+void buttonInit(Button_t *btn, GPIO_TypeDef *port, uint16_t pin, uint8_t active_high, uint8_t hold_enable) {
+    // Assign hardware settings
+    btn->gpio.GPIO_Port   = port;
+    btn->gpio.GPIO_Pin    = pin;
+    btn->gpio.Active_High = active_high;
+
+    // Reset runtime variables
+    btn->vars.hold_enable = hold_enable;
+    btn->vars.hold        = 0;
+    btn->vars.input       = 0;
+    btn->vars.debounce    = 0;
+    btn->vars.change      = 0;
+    btn->vars.pressed     = 0;
+    btn->vars.counter     = 0;
+}
+
 /* -------------------------------------------------------------------------
  * buttonCallback()
  *

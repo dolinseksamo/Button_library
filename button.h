@@ -46,6 +46,7 @@ typedef struct {
 } Button_t;
 
 // === API Functions ===
+void buttonInit(Button_t *btn, GPIO_TypeDef *port, uint16_t pin, uint8_t active_high, uint8_t hold_enable);
 uint8_t buttonCallback(Button_t *btn);                     // Handles button logic and returns event
 inline void buttonIncrementCounter(ButtonVariables_t *btn); // Called in timer ISR → debounce & hold logic
 inline void buttonInput(ButtonVariables_t *btn);            // Called in EXTI ISR → marks input change
