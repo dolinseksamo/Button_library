@@ -7,98 +7,82 @@
 
 #include "button.h"
 
-
-
-#ifdef HOLD
-    btn->hold = 0;
-#endif
-
-#ifdef SINGLE
-    btn->press_count = 0;
-#endif
-}
-
-
-/* Handles button press events and detects different types of presses
+/* -------------------------------------------------------------------------
+ * buttonCallback()
  *
- * This function should be called in the appropriate interrupt or polling routine.
- * It debounces the button input, and detects single press, double press, and hold events.
+ * Main function to process button state changes.
+ * - Should be called when (btn->vars.change == 1).
+ * - Reads the GPIO pin and updates the pressed/released state.
+ * - Handles pressed, released, and hold events.
  *
- * For every button, check if (button.change) buttonCallback(button);
- *
- * Returns:
- * 0 - No event detected (debounce period)
- * 1 - Hold detected
- * 3 - Single press detected
- * 2 - Double press detected
- */
-uint8_t buttonCallback(Button *btn) {
+ * Returns one of:
+ *  - BUTTON_NOTHING   → no event detected
+ *  - BUTTON_PRESSED   → button was pressed
+ *  - BUTTON_RELEASED  → button was released
+ *  - BUTTON_HOLD      → hold time exceeded (if enabled)
+ * ------------------------------------------------------------------------- */
+uint8_t buttonCallback(Button_t *btn) {
+    btn->vars.change = 0;  // Clear change flag (event acknowledged)
+    uint8_t out = BUTTON_NOTHING;
 
-	btn->change = 0;						// acknowledge change
-	uint8_t out = BUTTON_NOTHING;			// Set default output
-	uint8_t pin_state = (uint8_t)HAL_GPIO_ReadPin(btn->GPIO_Port, btn->GPIO_Pin);	// Read pin state
-	btn->pressed = btn->Active_High ^ pin_state;		// Check if pressed or released
+    // Read the current GPIO pin state
+    uint8_t pin_state = (uint8_t)HAL_GPIO_ReadPin(btn->gpio.GPIO_Port, btn->gpio.GPIO_Pin);
 
-	if (btn->pressed) {				// Check if button is pressed ...
-#ifdef SINGLE
-		btn->press_count++;
-#else
-		out = BUTTON_PRESSED;
-#endif
+    // Apply polarity (Active High / Active Low) to determine if pressed
+    btn->vars.pressed = btn->gpio.Active_High ^ pin_state;
 
-#ifdef HOLD
-		if (btn->hold) {
-			out = BUTTON_HOLD;
-			btn->hold = 0;
-			btn->press_count = 0;
-			btn->counter = 0;
-			btn->pressed = 0;
-		}
-#endif
-	}
-#ifdef SINGLE
-	else if (btn->press_count == 1) {
-		out = BUTTON_SINGLE;	// Single press
-		btn->press_count = 0;
-		btn->counter = 0;
-	}
-#else
-	else {
-		out = BUTTON_RELEASED;
-		btn->counter = 0;
-	}
-#endif
+    if (btn->vars.pressed) {
+        // Button is physically pressed
+        out = BUTTON_PRESSED;
+
+        // Check hold detection
+        if (btn->vars.hold_enable && btn->vars.hold) {
+            out = BUTTON_HOLD;
+            btn->vars.hold = 0;       // Reset hold flag
+            btn->vars.counter = 0;    // Reset hold counter
+            btn->vars.pressed = 0;    // Clear pressed state
+        }
+    } else {
+        // Button is physically released
+        out = BUTTON_RELEASED;
+        btn->vars.counter = 0;        // Reset hold counter on release
+    }
 
     return out;
 }
-/* Call this function in timer interrupt callback
- * Set HOLD_TIME in counter units
- * ex. Timer_freq = 1000Hz -> HOLD_TIME is in ms.
- */
-void buttonIncrementCounter(Button *btn) {
 
-	if (btn->input) {
-		// Check for debounce
-		if (++btn->debounce >= BUTTON_DEBOUNCE_TIME) {
-			btn->change = 1;
-			btn->input = 0;
-			btn->debounce = 0;
-		}
-	}
-	#ifdef HOLD
-	// Check for hold requirement
-	if (btn->pressed && ++btn->counter >= BUTTON_HOLD_TIME) {
-		btn->change = 1;
-		btn->hold = 1;
-	}
-	#endif
+/* -------------------------------------------------------------------------
+ * buttonIncrementCounter()
+ *
+ * Called in a periodic timer interrupt (example: 1kHz SysTick).
+ * Handles:
+ *  - Debouncing (filters out noise when button toggles)
+ *  - Hold timing (increments counter while pressed)
+ * ------------------------------------------------------------------------- */
+inline void buttonIncrementCounter(ButtonVariables_t *btn) {
+    if (btn->input) {
+        // Debounce in progress
+        if (++btn->debounce >= BUTTON_DEBOUNCE_TIME) {
+            btn->change = 1;          // Signal state change ready
+            btn->input = 0;           // Clear input trigger
+            btn->debounce = 0;        // Reset debounce counter
+        }
+    }
+
+    // Hold detection (if enabled and still pressed)
+    if (btn->hold_enable && btn->pressed && ++btn->counter >= BUTTON_HOLD_TIME) {
+        btn->change = 1;              // Signal hold event ready
+        btn->hold = 1;                // Mark hold detected
+    }
 }
 
-/* Call this function in external interrupt callback
+/* -------------------------------------------------------------------------
+ * buttonInput()
  *
- */
-void buttonInput(Button *btn) {
-	
-	btn->debounce = 0;
-	btn->input = 1;
+ * Called in EXTI interrupt when the button pin changes.
+ * Simply flags input for debounce processing.
+ * ------------------------------------------------------------------------- */
+inline void buttonInput(ButtonVariables_t *btn) {
+    btn->debounce = 0;  // Reset debounce counter
+    btn->input = 1;     // Mark input change detected
 }

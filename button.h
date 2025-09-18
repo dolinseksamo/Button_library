@@ -10,53 +10,44 @@
 
 #include "main.h"
 
-//#define HOLD    // Unomment this if you need hold
-//#define SINGLE  // Uncomment to detect only button press (if this is not active the function return button pressed or released)
+// === User Configuration ===
+#define BUTTON_DEBOUNCE_TIME 10      // Debounce time in timer ticks (example: 1ms tick → 10ms debounce)
+#define BUTTON_HOLD_TIME     1000    // Hold time in timer ticks (example: 1ms tick → 1000ms hold)
 
-#define BUTTON_DEBOUNCE_TIME 10      // Debounce time in milliseconds
-#define BUTTON_HOLD_TIME 1000       // Hold time in milliseconds
+// === Event Return Codes ===
+#define BUTTON_NOTHING   0           // No valid event detected
+#define BUTTON_PRESSED   1           // Button pressed (down event)
+#define BUTTON_RELEASED  2           // Button released (up event)
+#define BUTTON_HOLD      4           // Button held long enough (if hold is enabled)
 
-#define BUTTON_NOTHING 0
-
-#ifdef HOLD
-#define BUTTON_HOLD 1
-#endif
-
-#ifdef SINGLE
-#define BUTTON_SINGLE 2
-#endif
-
-#ifndef SINGLE
-#define BUTTON_PRESSED 3    
-#define BUTTON_RELEASED 4
-#endif
-
-#define BUTTON_ACTIVE_HIGH 0
-#define BUTTON_ACTIVE_LOW 1
-
+// === GPIO Configuration Struct ===
 typedef struct {
-    GPIO_TypeDef *GPIO_Port;
-    uint16_t GPIO_Pin;
-    uint8_t Active_High;  // 0 = Active High, 1 = Active Low
+    GPIO_TypeDef *GPIO_Port;         // GPIO port of the button
+    uint16_t GPIO_Pin;               // GPIO pin of the button
+    uint8_t Active_High;             // 0 = Active High, 1 = Active Low (button logic)
+} ButtonGpio_t;
 
-#ifdef SINGLE
-    uint8_t press_count;
-#endif
+// === Runtime State Variables ===
+typedef struct {
+    uint8_t hold_enable;             // Enable/disable hold detection (0 = off, 1 = on)
 
-#ifdef HOLD
-    uint8_t hold;
-#endif
+    volatile uint8_t hold;           // Flag: set when hold is detected
+    volatile uint8_t input;          // Flag: set when EXTI detects input change
+    volatile uint8_t debounce;       // Debounce counter
+    volatile uint8_t change;         // Flag: event ready for processing
+    volatile uint8_t pressed;        // Current state (1 = pressed, 0 = released)
+    volatile uint16_t counter;       // Counter used for hold timing
+} ButtonVariables_t;
 
-    volatile uint8_t input;
-    volatile uint8_t debounce;
-    volatile uint8_t change;
-    volatile uint8_t pressed;
-    volatile uint16_t counter;
-} Button;
+// === Main Button Object ===
+typedef struct {
+    ButtonGpio_t gpio;               // Hardware configuration (pin + polarity)
+    ButtonVariables_t vars;          // Runtime variables (state, debounce, hold detection)
+} Button_t;
 
-
-uint8_t buttonCallback(Button *btn);
-void buttonIncrementCounter(Button *btn);
-void buttonInput(Button *btn);
+// === API Functions ===
+uint8_t buttonCallback(Button_t *btn);                     // Handles button logic and returns event
+inline void buttonIncrementCounter(ButtonVariables_t *btn); // Called in timer ISR → debounce & hold logic
+inline void buttonInput(ButtonVariables_t *btn);            // Called in EXTI ISR → marks input change
 
 #endif /* INC_BUTTON_H_ */
