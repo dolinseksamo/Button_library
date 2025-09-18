@@ -49,9 +49,8 @@ void buttonInit(Button_t *btn, GPIO_TypeDef *port, uint16_t pin, uint8_t active_
 // Should be called when (btn->vars.change) is set
 // Reads GPIO, determines press/release/hold, and calls handlers
 // ==================================================================
-uint8_t buttonCallback(Button_t *btn) {
+void buttonCallback(Button_t *btn) {
     btn->vars.change = 0;      // Reset change flag
-    uint8_t out = BUTTON_NOTHING;
 
     // Read GPIO pin state
     uint8_t pin_state = (uint8_t)HAL_GPIO_ReadPin(btn->gpio.GPIO_Port, btn->gpio.GPIO_Pin);
@@ -61,12 +60,10 @@ uint8_t buttonCallback(Button_t *btn) {
 
     if (btn->vars.pressed) {
         // Button is pressed
-        out = BUTTON_PRESSED;
         btn->onPress();        // Safe to call (defaults to empty)
 
         // Handle hold event
         if (btn->vars.hold_enable && btn->vars.hold) {
-            out = BUTTON_HOLD;
             btn->vars.hold = 0;
             btn->vars.counter = 0;
             btn->vars.pressed = 0;
@@ -74,12 +71,9 @@ uint8_t buttonCallback(Button_t *btn) {
         }
     } else {
         // Button is released
-        out = BUTTON_RELEASED;
         btn->vars.counter = 0; // Reset hold counter
         btn->onRelease();      // Safe to call
     }
-
-    return out;
 }
 
 // ==================================================================

@@ -79,7 +79,7 @@ void buttonInit(Button_t *btn, GPIO_TypeDef *port, uint16_t pin, uint8_t active_
 
 // Process button state and run callbacks
 // Call this when (btn->vars.change) is set
-uint8_t buttonCallback(Button_t *btn);
+void buttonCallback(Button_t *btn);
 
 // Run in timer ISR → updates debounce + hold logic
 inline void buttonIncrementCounter(ButtonVariables_t *btn);
