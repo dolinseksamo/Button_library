@@ -8,6 +8,9 @@
 #include "button.h"
 
 
+// Default empty handler (does nothing)
+static void emptyHandler(void) { }
+
 /* -------------------------------------------------------------------------
  * buttonInit()
  *
@@ -34,6 +37,11 @@ void buttonInit(Button_t *btn, GPIO_TypeDef *port, uint16_t pin, uint8_t active_
     btn->vars.change      = 0;
     btn->vars.pressed     = 0;
     btn->vars.counter     = 0;
+
+    // Safe default callbacks
+    btn->onPress   = emptyHandler;
+    btn->onRelease = emptyHandler;
+    btn->onHold    = emptyHandler;
 }
 
 /* -------------------------------------------------------------------------

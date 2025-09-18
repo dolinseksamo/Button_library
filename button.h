@@ -43,6 +43,10 @@ typedef struct {
 typedef struct {
     ButtonGpio_t gpio;               // Hardware configuration (pin + polarity)
     ButtonVariables_t vars;          // Runtime variables (state, debounce, hold detection)
+
+    void (*onPress)(void);    // Callback for press
+    void (*onRelease)(void);  // Callback for release
+    void (*onHold)(void);     // Callback for hold
 } Button_t;
 
 // === API Functions ===
@@ -53,47 +57,56 @@ inline void buttonInput(ButtonVariables_t *btn);            // Called in EXTI IS
 
 
 /* Example usage of the API functions:
-* -buttonCallback() should be called in the main loop when btn->vars.change is set.
-* while (1) {  Main while loop
-*     for (int i = 0; i < BUTTON_NUMBER; i++) {
-*         if (buttons[i].vars.change) {
-*             uint8_t event = buttonCallback(&buttons[i]);
-* 
-*             switch (event) {
-*                 case BUTTON_PRESSED:
-*                     // Handle press for button i
-*                     break;
-* 
-*                 case BUTTON_RELEASED:
-*                     // Handle release for button i
-*                     break;
-* 
-*                 case BUTTON_HOLD:
-*                     // Handle hold for button i
-*                     break;
-* 
-*                 default:
-*                     break;
-*             }
-*         }
-*     }
-* }
-*
-* -buttonIncrementCounter() should be called in a timer interrupt (e.g., every 1ms).
-* void HAL_SYSTICK_Callback(void) {
-*     for (int i = 0; i < BUTTON_NUMBER; i++) {
-*         buttonIncrementCounter(&buttons[i].vars);
-*     }
-* }
-*
-* -buttonInput() should be called in the EXTI interrupt handler for the button GPIO pin.
-* void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-*     for (int i = 0; i < BUTTON_NUMBER; i++) {
-*         if (GPIO_Pin == buttons[i].gpio.GPIO_Pin) {
-*             buttonInput(&buttons[i].vars);
-*         }
-*     }
-* }
+
+#define BUTTON_NUMBER 4
+
+Button_t buttons[BUTTON_NUMBER];   // Array of button handles
+
+
+int main(void) {
+ // === Assign custom handlers ===
+    buttons[0].onPress   = button1Pressed;
+    buttons[0].onRelease = button1Released;
+    buttons[0].onHold    = button1Hold;
+
+    buttons[1].onPress   = button2Pressed;
+    buttons[1].onRelease = button2Released;
+    buttons[1].onHold    = button2Hold;
+
+    buttons[2].onPress   = button3Pressed;
+    buttons[2].onRelease = button3Released;
+    // no hold assigned → defaults to empty handler
+
+    buttons[3].onPress   = button4Pressed;
+    buttons[3].onRelease = button4Released;
+    // no hold assigned → defaults to empty handler
+
+    // === Main loop ===
+    while (1) {
+        for (int i = 0; i < BUTTON_NUMBER; i++) {
+            if (buttons[i].vars.change) {
+                buttonCallback(&buttons[i]);  
+                // Callbacks are executed inside buttonCallback()
+            }
+        }
+    }
+}
+
+// === Timer ISR (e.g. SysTick at 1kHz) ===
+void HAL_SYSTICK_Callback(void) {
+    for (int i = 0; i < BUTTON_NUMBER; i++) {
+        buttonIncrementCounter(&buttons[i].vars);
+    }
+}
+
+// === EXTI ISR (button pin change) ===
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    for (int i = 0; i < BUTTON_NUMBER; i++) {
+        if (GPIO_Pin == buttons[i].gpio.GPIO_Pin) {
+            buttonInput(&buttons[i].vars);
+        }
+    }
+}
 */
 
 #endif /* INC_BUTTON_H_ */
