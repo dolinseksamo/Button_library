@@ -51,4 +51,49 @@ uint8_t buttonCallback(Button_t *btn);                     // Handles button log
 inline void buttonIncrementCounter(ButtonVariables_t *btn); // Called in timer ISR → debounce & hold logic
 inline void buttonInput(ButtonVariables_t *btn);            // Called in EXTI ISR → marks input change
 
+
+/* Example usage of the API functions:
+* -buttonCallback() should be called in the main loop when btn->vars.change is set.
+* while (1) {  Main while loop
+*     for (int i = 0; i < BUTTON_NUMBER; i++) {
+*         if (buttons[i].vars.change) {
+*             uint8_t event = buttonCallback(&buttons[i]);
+* 
+*             switch (event) {
+*                 case BUTTON_PRESSED:
+*                     // Handle press for button i
+*                     break;
+* 
+*                 case BUTTON_RELEASED:
+*                     // Handle release for button i
+*                     break;
+* 
+*                 case BUTTON_HOLD:
+*                     // Handle hold for button i
+*                     break;
+* 
+*                 default:
+*                     break;
+*             }
+*         }
+*     }
+* }
+*
+* -buttonIncrementCounter() should be called in a timer interrupt (e.g., every 1ms).
+* void HAL_SYSTICK_Callback(void) {
+*     for (int i = 0; i < BUTTON_NUMBER; i++) {
+*         buttonIncrementCounter(&buttons[i].vars);
+*     }
+* }
+*
+* -buttonInput() should be called in the EXTI interrupt handler for the button GPIO pin.
+* void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+*     for (int i = 0; i < BUTTON_NUMBER; i++) {
+*         if (GPIO_Pin == buttons[i].gpio.GPIO_Pin) {
+*             buttonInput(&buttons[i].vars);
+*         }
+*     }
+* }
+*/
+
 #endif /* INC_BUTTON_H_ */
