@@ -9,6 +9,13 @@ This module provides functionality to handle button press events, including debo
 - `button.c`: Implementation of button handling functions.
 - `button.h`: Header file containing the declarations and definitions for the button handling module.
 
+## Defines
+```c
+#define HOLD
+#define SINGLE
+```
+Uncomment any of these two to change how button inputs are handled
+
 ## Functions
 
 ### `buttonCallback`
@@ -25,8 +32,10 @@ Handles button press events and detects different types of presses. This functio
 **Returns:**
 - `0`: No event detected (debounce period).
 - `1`: Hold detected.
-- `3`: Single press detected.
-- `2`: Double press detected.
+- `2`: Single press detected.
+- `3`: Press detected.
+- `4`: release detected.
+
 
 ### `buttonIncrementCounter`
 
@@ -89,7 +98,6 @@ Button myButton = {
 
 
 void main() {
-    buttonInit(myButton);
     while(1) {
         if (myButton.change) buttonCallback(myButton);
     }
